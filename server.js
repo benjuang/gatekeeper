@@ -65,6 +65,8 @@ app.post('/passcode', function(req, res){
 
 // This retrieves the file to play to unlock a door.
 app.get('/unlock.wav', function(req, res){
+  // this was shamelessly stolen from http://stackoverflow.com/questions/10046039/nodejs-send-file-in-response
+  // My node.js-foo isn't strong enough to know just what it does yet.
   var filePath = path.join(__dirname, config.unlock_file);
   var stat = fileSystem.statSync(filePath);
 
