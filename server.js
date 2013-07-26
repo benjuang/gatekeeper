@@ -8,8 +8,10 @@ var express = require('express')
 function validateTwilioRequest(req, res){
   //validateRequest returns true if the request originated from Twilio
   if (twilio.validateExpressRequest(req, config.twilio_token)) {
+    debug('Validation successful.');
     return true;
   } else {
+    debug('Validation failed.');
     res.writeHead(403, { 'Content-Type':'text/plain' });
     res.end('Banana missing.  Please insert donut to continue.');
     return false;
@@ -21,11 +23,13 @@ app.use(express.bodyParser());
 
 // Simple endpoint to check if the server is up and running.
 app.get('/test', function(req, res){
+  debug('/test - server is up and running!');
   res.send('OK');
 });
 
 // Twilio will hit this first.
 app.post('/dingdong', function(req, res){
+  debug('/dingdong');
   if (!validateTwilioRequest(req, res)) return false;
 
   var response = new twilio.TwimlResponse();
@@ -50,11 +54,13 @@ app.post('/dingdong', function(req, res){
 
 // If the length of the passcode has been entered, twilio will visit this.
 app.post('/passcode', function(req, res){
+  debug('/passcode');
   if (!validateTwilioRequest(req, res)) return false;
 
   var response = new twilio.TwimlResponse();
 
   if (req && req.body && req.body.Digits){
+    debug('validating '+req.body.Digits+' == '+config.passcode);
     if (req.body.Digits == config.passcode){
       response.play("/unlock.wav");
     }
@@ -65,13 +71,15 @@ app.post('/passcode', function(req, res){
 
 // This retrieves the file to play to unlock a door.
 app.get('/unlock.wav', function(req, res){
+  debug('/unlock.wav');
+
   // this was shamelessly stolen from http://stackoverflow.com/questions/10046039/nodejs-send-file-in-response
   // My node.js-foo isn't strong enough to know just what it does yet.
   var filePath = path.join(__dirname, config.unlock_file);
   var stat = fileSystem.statSync(filePath);
 
   res.writeHead(200, {
-        'Content-Type': 'audio/wave',
+        'Content-Type': 'audio/wav',
         'Content-Length': stat.size
     });
 
@@ -79,5 +87,12 @@ app.get('/unlock.wav', function(req, res){
   readStream.pipe(res);
 });
 
+
 app.listen(config.port);
-console.log('Listening on port '+config.port);
+debug('Listening on port '+config.port);
+
+
+function debug(message){
+  if (config.debug)
+    console.log(message);
+}
