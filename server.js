@@ -7,6 +7,11 @@ var express = require('express')
 
 function validateTwilioRequest(req, res){
   //validateRequest returns true if the request originated from Twilio
+  if (req && req.body){
+    // For some reason, I'm seeing __proto__ in the request on my linode server
+    // It throws off the signature calculation, so we don't want it.
+    delete req.body["__proto__"];
+  }
   if (twilio.validateExpressRequest(req, config.twilio_token)) {
     debug('Validation successful.');
     return true;
