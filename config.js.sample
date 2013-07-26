@@ -1,0 +1,22 @@
+var config = {}
+
+// Used to validate requests
+config.twilio_token = "YOUR_TWILIO_AUTH_TOKEN";
+
+// What port should we listen on?
+config.port = 3425; // 'dial'
+
+// How do we want to greet these humans?
+config.greeting = 'Enter password to access the matrix, or press pound to call.';
+
+// This is the number that should be dialed if the caller hits '#'
+config.forward_phone = "867-5301";
+
+// Super secret passcode.
+config.passcode = "0000";
+
+// wav file to for Twilio to play.
+// Use http://www.dialabc.com/sound/generate/ (default audio format should work?)
+config.unlock_file = "6.wav";
+
+module.exports = config;
