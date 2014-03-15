@@ -7,7 +7,9 @@ config.twilio_token = "YOUR_TWILIO_AUTH_TOKEN";
 config.port = 3425; // 'dial'
 
 // How do we want to greet these humans?
-config.greeting = 'Enter password to access the matrix, or press pound to call.';
+// UNCOMMENT ONE OF THE FOLLOWING:
+//config.message = 'Enter password to access the matrix, or press pound to call.';
+//config.message_file = "message.wav";
 
 // This is the number that should be dialed if the caller hits '#'
 config.forward_phone = "867-5301";
@@ -18,5 +20,8 @@ config.passcode = "0000";
 // wav file to for Twilio to play.
 // Use http://www.dialabc.com/sound/generate/ (default audio format should work?)
 config.unlock_file = "6.wav";
+
+// Slightly more verbose output.
+//config.debug = true;
 
 module.exports = config;

@@ -6,6 +6,8 @@ var express = require('express')
     app = express();
 
 function validateTwilioRequest(req, res){
+  return true;
+
   //validateRequest returns true if the request originated from Twilio
   if (req && req.body){
     // For some reason, I'm seeing __proto__ in the request on my linode server
@@ -42,14 +44,17 @@ app.post('/dingdong', function(req, res){
   response.gather({
         action: '/passcode',
         finishOnKey: '#',
-        timeout: 180,
+        timeout: 10,
         numDigits: config.passcode.length
       }, function() {
-          this.say({
-            voice: 'alice'
-          }, config.greeting)
-      })
-    .dial({
+          if (typeof(config.message) == "string") {
+            this.say({
+              voice: 'alice'
+            }, config.message);
+          } else {
+            this.play("/message.wav");
+          }
+      }).dial({
           timeout: 30,
           timeLimit: 180,
         }, config.forward_phone);
@@ -68,6 +73,8 @@ app.post('/passcode', function(req, res){
     debug('validating '+req.body.Digits+' == '+config.passcode);
     if (req.body.Digits == config.passcode){
       response.play("/unlock.wav");
+    } else {
+      response.say("Incorrect.  Goodbye.")
     }
   }
 
@@ -81,6 +88,24 @@ app.get('/unlock.wav', function(req, res){
   // this was shamelessly stolen from http://stackoverflow.com/questions/10046039/nodejs-send-file-in-response
   // My node.js-foo isn't strong enough to know just what it does yet.
   var filePath = path.join(__dirname, config.unlock_file);
+  var stat = fileSystem.statSync(filePath);
+
+  res.writeHead(200, {
+        'Content-Type': 'audio/wav',
+        'Content-Length': stat.size
+    });
+
+  var readStream = fileSystem.createReadStream(filePath);
+  readStream.pipe(res);
+});
+
+// This returns the message sound file
+app.get('/message.wav', function(req, res){
+  debug('/message.wav');
+
+  // this was shamelessly stolen from http://stackoverflow.com/questions/10046039/nodejs-send-file-in-response
+  // My node.js-foo isn't strong enough to know just what it does yet.
+  var filePath = path.join(__dirname, config.message_file);
   var stat = fileSystem.statSync(filePath);
 
   res.writeHead(200, {
