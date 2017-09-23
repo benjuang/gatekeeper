@@ -1,9 +1,13 @@
 var express = require('express')
     fileSystem = require('fs'),
     path = require('path'),
-    twilio = require('twilio'),
-    config = require('./config'),
-    app = express();
+    app = express(),
+    https = require('https'),
+    querystring = require('querystring');
+
+var config = require('./config');
+var client = require('twilio')(config.twilio_sid, config.twilio_token);
+var twilio = require('twilio');
 
 function validateTwilioRequest(req, res){
   return true;
@@ -41,7 +45,15 @@ app.post('/dingdong', function(req, res){
 
   var response = new twilio.TwimlResponse();
 
-  response.gather({
+  /*
+  response.dial({
+          timeout: 30,
+          timeLimit: 180,
+        }, config.forward_phone);
+  res.send(response.toString());
+  return;
+  */
+  response.pause({ length:5 }).gather({
         action: '/passcode',
         finishOnKey: '#',
         timeout: 10,
@@ -60,19 +72,55 @@ app.post('/dingdong', function(req, res){
         }, config.forward_phone);
 
   res.send(response.toString());
+
+  client.sendMessage({
+    to: '+12403883850',
+    from: '+14152363539',
+    body: 'Door activated.'
+  }, function(){});
 });
 
 // If the length of the passcode has been entered, twilio will visit this.
 app.post('/passcode', function(req, res){
   debug('/passcode');
-  if (!validateTwilioRequest(req, res)) return false;
+  // if (!validateTwilioRequest(req, res)) return false;
 
   var response = new twilio.TwimlResponse();
 
   if (req && req.body && req.body.Digits){
     debug('validating '+req.body.Digits+' == '+config.passcode);
     if (req.body.Digits == config.passcode){
-      response.play("/unlock.wav");
+      // response.play("/unlock.wav");
+
+      var postData = querystring.stringify(config.on_success_endpoint.post_data);
+
+      var options = config.on_success_endpoint.options;
+      options.headers = {
+             'Content-Type': 'application/x-www-form-urlencoded',
+             'Content-Length': postData.length
+           };
+
+      var req = https.request(options, (res) => {
+        console.log('statusCode:', res.statusCode);
+        console.log('headers:', res.headers);
+
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        // The whole response has been received. Print out the result.
+        res.on('end', () => {
+          console.log(data);
+        });
+      });
+
+      req.on('error', (e) => {
+        console.log("Error: " + err.message);
+      });
+
+      req.write(postData);
+      req.end();
+
     } else {
       response.say("Incorrect.  Goodbye.")
     }

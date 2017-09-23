@@ -1,6 +1,7 @@
 var config = {}
 
 // Used to validate requests
+config.twilio_sid = "YOUR_TWILIO_SID";
 config.twilio_token = "YOUR_TWILIO_AUTH_TOKEN";
 
 // What port should we listen on?
@@ -20,6 +21,16 @@ config.passcode = "0000";
 // wav file to for Twilio to play.
 // Use http://www.dialabc.com/sound/generate/ (default audio format should work?)
 config.unlock_file = "6.wav";
+
+config.on_success_endpoint = {
+  options: {
+        hostname: 'agent.electricimp.com',
+        port: 443,
+        path: '/agent_agent_agent',
+        method: 'POST',
+      },
+  post_data: {'password' : 'password'}
+}
 
 // Slightly more verbose output.
 //config.debug = true;
